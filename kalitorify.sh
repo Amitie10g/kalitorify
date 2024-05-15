@@ -182,8 +182,8 @@ setup_general() {
     printf "%s\\n" "nameserver 127.0.0.1" > /etc/resolv.conf
 
     # reload systemd daemons
-    printf "%s\\n" "Reload systemd daemons"
-    systemctl --system daemon-reload
+    printf "%s\\n" "Reload runit services"
+    pkill -HUP runsvdir
 }
 
 
@@ -322,7 +322,7 @@ check_ip() {
 check_status() {
     info "Check current status of Tor service"
 
-    if systemctl is-active tor.service >/dev/null 2>&1; then
+    if service tor status >/dev/null 2>&1; then
         msg "Tor service is active"
     else
         die "Tor service is not running! exit"
@@ -350,13 +350,12 @@ check_status() {
     check_ip
 }
 
-
 ## Start transparent proxy through Tor
 start() {
     check_root
 
     # Exit if tor.service is already active
-    if systemctl is-active tor.service >/dev/null 2>&1; then
+    if service tor status >/dev/null 2>&1; then
         die "Tor service is already active, stop it first"
     fi
 
@@ -375,7 +374,7 @@ start() {
     # start tor.service
     printf "%s\\n" "Start Tor service"
 
-    if ! systemctl start tor.service >/dev/null 2>&1; then
+    if ! service tor start >/dev/null 2>&1; then
         die "can't start tor service, exit!"
     fi
 
@@ -390,7 +389,6 @@ start() {
             "[OK]" "Transparent Proxy activated, your system is under Tor"
 }
 
-
 ## Stop transparent proxy
 #
 # stop connection with Tor Network and return to clearnet navigation
@@ -398,14 +396,14 @@ stop() {
     check_root
 
     # don't run function if tor.service is NOT running!
-    if systemctl is-active tor.service >/dev/null 2>&1; then
+    if service tor status >/dev/null 2>&1; then
         info "Stopping Transparent Proxy"
 
         # resets default iptables rules
         setup_iptables default
 
         printf "%s\\n" "Stop tor service"
-        systemctl stop tor.service
+        service tor stop
 
         # restore /etc/resolv.conf:
         #
@@ -435,7 +433,6 @@ stop() {
     fi
 }
 
-
 ## Restart
 #
 # restart tor.service (i.e. get new Tor exit node)
@@ -443,10 +440,10 @@ stop() {
 restart() {
     check_root
 
-    if systemctl is-active tor.service >/dev/null 2>&1; then
+    if service tor status >/dev/null 2>&1; then
         info "Change IP address"
 
-        systemctl restart tor.service
+        service tor restart
         sleep 1
         check_ip
         exit 0
@@ -454,7 +451,6 @@ restart() {
         die "Tor service is not running! exit"
     fi
 }
-
 
 ## Show help menù
 usage() {
@@ -527,4 +523,3 @@ main() {
 
 # Call main
 main "${@}"
-
