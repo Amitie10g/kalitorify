@@ -292,9 +292,10 @@ check_ip() {
 
     # IP API URLs list
     local url_list=(
-        'https://ipinfo.io/'
-        'https://api.myip.com/'
-        'https://ifconfig.me'
+        'https://icanhazip.com/'
+        'https://api.ipify.org/'
+        'https://myip.dnsomatic.com/'
+        'https://checkip.amazonaws.com/'
     )
 
     info "Check public IP address"
